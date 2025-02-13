@@ -87,7 +87,7 @@ variable "worker_ssh_private_key" {
 }
 
 variable "worker_count" {
-  default = 2
-  type = number
+  default     = 2
+  type        = number
   description = "Number of worker nodes"
 }
