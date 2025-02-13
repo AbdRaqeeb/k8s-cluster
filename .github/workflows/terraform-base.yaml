@@ -1,0 +1,158 @@
+name: "Terraform Base Workflow"
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      working_directory:
+        required: true
+        type: string
+      auto_approve:
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      config:
+        required: true
+      master_ssh_private_key:
+        required: true
+      worker_ssh_private_key:
+        required: true
+      master_ssh_public_key:
+        required: true
+      worker_ssh_public_key:
+        required: true
+      hcloud_token:
+        required: true
+      tf_api_token:
+        required: true
+
+jobs:
+  terraform:
+    name: 'Terraform'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    defaults:
+      run:
+        working-directory: ${{ inputs.working_directory }}
+
+    env:
+      TF_VAR_master_ssh_private_key: ${{ secrets.master_ssh_private_key }}
+      TF_VAR_worker_ssh_private_key: ${{ secrets.worker_ssh_private_key }}
+      TF_VAR_master_ssh_public_key: ${{ secrets.master_ssh_public_key }}
+      TF_VAR_worker_ssh_public_key: ${{ secrets.worker_ssh_public_key }}
+      TF_VAR_hcloud_token: ${{ secrets.hcloud_token }}
+      TF_VAR_environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set environment variables
+        run: |
+          config='${{ secrets.config }}'
+          echo "$config" | jq -r '
+            with_entries(
+              select(.key | test("^((?!.*ssh_.*|.*token.*|environment).*$)"))
+            ) | to_entries[] | "TF_VAR_\(.key)=\(.value)"
+          ' | while IFS= read -r line; do
+            if [ ! -z "$line" ]; then
+              echo "$line" >> $GITHUB_ENV
+            fi
+          done
+
+      - name: Verify environment variables
+        run: |
+          # Print non-sensitive vars for debugging
+          env | grep -E "TF_VAR_(environment|network|server|lb)" || true
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: v1.10.5
+          terraform_wrapper: false
+          cli_config_credentials_token: ${{ secrets.tf_api_token }}
+
+      - name: Terraform Format
+        id: fmt
+        run: terraform fmt -check
+
+      - name: Terraform Init
+        id: init
+        run: terraform init
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color -input=false
+        continue-on-error: true
+
+      - uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        env:
+          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+            <details><summary>Validation Output</summary>
+
+            \`\`\`\n
+            ${{ steps.validate.outputs.stdout }}
+            \`\`\`
+
+            </details>
+
+            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+
+            <details><summary>Show Plan</summary>
+
+            \`\`\`\n
+            ${process.env.PLAN}
+            \`\`\`
+
+            </details>
+
+            *Environment: \`${{ inputs.environment }}\`*
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ inputs.working_directory }}\`*`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              ...context.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(comment => {
+              return comment.user.type === 'Bot' && 
+                     comment.body.includes('Terraform Format and Style') &&
+                     comment.body.includes(`Environment: \`${process.env.ENVIRONMENT}\``);
+            });
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                ...context.repo,
+                comment_id: botComment.id,
+                body: output
+              });
+            } else {
+              await github.rest.issues.createComment({
+                ...context.repo,
+                issue_number: context.issue.number,
+                body: output
+              });
+            }
+
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+      - name: Terraform Apply
+        if: inputs.environment == 'prod' && github.event_name != 'pull_request'
+        run: terraform apply -auto-approve -input=false

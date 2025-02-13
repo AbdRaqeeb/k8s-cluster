@@ -1,4 +1,5 @@
 name: "Dev Terraform"
+
 on:
   push:
     branches:
@@ -16,103 +17,16 @@ on:
 
 jobs:
   terraform:
-    name: 'Dev - Terraform'
-    runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: terraform/env/dev
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set environment variables
-        run: |
-          config='${{ secrets.DEV_CONFIG }}'
-          echo "$config" | jq -r 'to_entries | .[] | "TF_VAR_\(.key)=" + (.value | @sh)' | while read line; do
-            echo "$line" | sed 's/\\n/\n/g' >> $GITHUB_ENV
-          done
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version:  v1.10.5
-          terraform_wrapper: false
-          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
-
-      - name: Terraform Format
-        id: fmt
-        run: terraform fmt -check
-
-      - name: Terraform Init
-        id: init
-        run: terraform init
-
-      - name: Terraform Plan
-        id: plan
-        if: github.event_name == 'pull_request'
-        run: terraform plan
-        continue-on-error: true
-
-      - uses: actions/github-script@v7
-        if: github.event_name == 'pull_request'
-        env:
-          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            // 1. Retrieve existing bot comments for the PR
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            })
-            const botComment = comments.find(comment => {
-              return comment.user.type === 'Bot' && comment.body.includes('Terraform Format and Style')
-            })
-
-            // 2. Prepare format of the comment
-            const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
-            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
-            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
-            <details><summary>Validation Output</summary>
-
-            \`\`\`\n
-            ${{ steps.validate.outputs.stdout }}
-            \`\`\`
-
-            </details>
-
-            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
-
-            <details><summary>Show Plan</summary>
-
-            \`\`\`\n
-            ${process.env.PLAN}
-            \`\`\`
-
-            </details>
-
-            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
-
-            // 3. If we have a comment, update it, otherwise create a new one
-            if (botComment) {
-              github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: botComment.id,
-                body: output
-              })
-            } else {
-              github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: output
-              })
-            }
-
-      - name: Terraform Plan Status
-        if: steps.plan.outcome == 'failure'
-        run: exit 1
+    uses: ./.github/workflows/terraform-base.yaml
+    with:
+      environment: dev
+      working_directory: terraform/env/dev
+      auto_approve: false  # Plan only in dev
+    secrets:
+      config: ${{ secrets.DEV_CONFIG }}
+      master_ssh_private_key: ${{ secrets.DEV_MASTER_SSH_PRIVATE_KEY }}
+      worker_ssh_private_key: ${{ secrets.DEV_WORKER_SSH_PRIVATE_KEY }}
+      master_ssh_public_key: ${{ secrets.DEV_MASTER_SSH_PUBLIC_KEY }}
+      worker_ssh_public_key: ${{ secrets.DEV_WORKER_SSH_PUBLIC_KEY }}
+      hcloud_token: ${{ secrets.DEV_HCLOUD_TOKEN }}
+      tf_api_token: ${{ secrets.TF_API_TOKEN }}
