@@ -23,15 +23,15 @@ jobs:
         working-directory: terraform/env/dev
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Set environment variables
         run: |
           config='${{ secrets.DEV_CONFIG }}'
           echo "$config" | jq -r 'to_entries | .[] | "TF_VAR_\(.key)=" + (.value | @sh)' | while read line; do
             echo "$line" | sed 's/\\n/\n/g' >> $GITHUB_ENV
           done
-
-      - name: Checkout
-        uses: actions/checkout@v4
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
