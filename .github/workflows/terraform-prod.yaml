@@ -6,13 +6,13 @@ on:
       - main
     paths:
       - 'terraform/modules/**'
-      - 'terraform/env/prod/**'
+      - 'terraform/env/production/**'
   pull_request:
     branches:
       - main
     paths:
       - 'terraform/modules/**'
-      - 'terraform/env/prod/**'
+      - 'terraform/env/production/**'
   workflow_dispatch:
 
 jobs:
@@ -20,7 +20,7 @@ jobs:
     uses: ./.github/workflows/terraform-base.yaml
     with:
       environment: prod
-      working_directory: terraform/env/prod
+      working_directory: terraform/env/production
       auto_approve: true
     secrets:
       config: ${{ secrets.PRODUCTION_CONFIG }}
