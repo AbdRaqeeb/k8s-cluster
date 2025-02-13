@@ -6,6 +6,7 @@ on:
     paths:
       - 'terraform/modules/**'
       - 'terraform/env/production/**'
+  workflow_dispatch:
 
 jobs:
   terraform:
