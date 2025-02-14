@@ -1,0 +1,38 @@
+name: Build and Push Docker Image to GHCR
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - staging
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 22.12.0
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Docker image
+        run: |
+          docker build -t ghcr.io/${{ github.actor }}/demo-app:latest .
+        env:
+          CR_PAT: ${{ secrets.CR_PAT }}
+
+      - name: Log in to GitHub Container Registry
+        run: |
+          echo $CR_PAT | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Push Docker image to GHCR
+        run: |
+          docker push ghcr.io/${{ github.actor }}/demo-app:latest
