@@ -21,7 +21,7 @@ jobs:
     with:
       environment: prod
       working_directory: terraform/env/production
-      auto_approve: true
+      auto_approve: false
     secrets:
       config: ${{ secrets.PRODUCTION_CONFIG }}
       master_ssh_private_key: ${{ secrets.PROD_MASTER_SSH_PRIVATE_KEY }}

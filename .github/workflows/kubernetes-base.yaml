@@ -1,0 +1,44 @@
+name: "Kubernetes Base Workflow"
+
+on:
+  workflow_call:
+    inputs:
+      working_directory:
+        required: true
+        type: string
+
+jobs:
+  kubernetes:
+    name: 'Kubernetes'
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ${{ inputs.working_directory }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+
+      - name: Configure Kubernetes credentials
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+
+      - name: Validate Kubernetes manifests
+        run: |
+          kubectl apply --dry-run=client -f .
+
+      # Deploy to Kubernetes
+      - name: Deploy to Kubernetes
+        run: |
+          # Apply all manifests in the k8s directory
+          kubectl apply -f .

@@ -43,3 +43,5 @@ terraform.rc
 secrets/*.json
 
 .idea/
+
+**/vector-agent.yaml
