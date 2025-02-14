@@ -15,4 +15,4 @@ jobs:
     with:
       working_directory: kubernetes/monitoring/prometheus
     secrets:
-      config: ${{ secrets.KUBE_CONFIG }}
+      kube_config: ${{ secrets.KUBE_CONFIG }}

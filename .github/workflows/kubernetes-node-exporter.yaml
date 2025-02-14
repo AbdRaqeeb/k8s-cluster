@@ -14,4 +14,4 @@ jobs:
     with:
       working_directory: kubernetes/monitoring/node-exporter
     secrets:
-      config: ${{ secrets.KUBE_CONFIG }}
+      kube_config: ${{ secrets.KUBE_CONFIG }}
