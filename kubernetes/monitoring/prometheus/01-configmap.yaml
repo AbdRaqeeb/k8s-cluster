@@ -21,3 +21,4 @@ data:
       - job_name: 'kubernetes-apiservers'
         kubernetes_sd_configs:
           - role: endpoints
+
