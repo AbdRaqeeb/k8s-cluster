@@ -6,9 +6,12 @@ on:
       - main
     paths:
       - 'kubernetes/monitoring/grafana/**'
+  workflow_dispatch:
 
 jobs:
   kubernetes:
     uses: ./.github/workflows/kubernetes-base.yaml
     with:
       working_directory: kubernetes/monitoring/grafana
+    secrets:
+      config: ${{ secrets.KUBE_CONFIG }}

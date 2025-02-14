@@ -6,6 +6,10 @@ on:
       working_directory:
         required: true
         type: string
+    secrets:
+      kube_config:
+        description: Kube Config
+        required: true
 
 jobs:
   kubernetes:

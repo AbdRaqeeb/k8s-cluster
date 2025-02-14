@@ -6,9 +6,12 @@ on:
       - main
     paths:
       - 'kubernetes/nginx/**'
+  workflow_dispatch:
 
 jobs:
   kubernetes:
     uses: ./.github/workflows/kubernetes-base.yaml
     with:
       working_directory: kubernetes/nginx
+    secrets:
+      config: ${{ secrets.KUBE_CONFIG }}

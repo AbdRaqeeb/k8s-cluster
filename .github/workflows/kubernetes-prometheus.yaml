@@ -6,9 +6,13 @@ on:
       - main
     paths:
       - 'kubernetes/monitoring/prometheus/**'
+  workflow_dispatch:
+
 
 jobs:
   kubernetes:
     uses: ./.github/workflows/kubernetes-base.yaml
     with:
       working_directory: kubernetes/monitoring/prometheus
+    secrets:
+      config: ${{ secrets.KUBE_CONFIG }}

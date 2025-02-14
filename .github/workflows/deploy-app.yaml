@@ -7,10 +7,14 @@ on:
     paths:
       - 'kubernetes/apps/demo-app/**'
       - 'code/**'
+  workflow_run:
+    types:
+      - completed
+    workflows:
+      - Build and Push Docker Image to GHCR
 
 jobs:
   kubernetes:
     uses: ./.github/workflows/kubernetes-base.yaml
     with:
       working_directory: code/demo-app
-      namespace: 'web'
