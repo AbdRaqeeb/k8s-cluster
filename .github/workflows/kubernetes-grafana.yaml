@@ -1,0 +1,14 @@
+name: Grafana Kubernetes CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'kubernetes/monitoring/grafana/**'
+
+jobs:
+  kubernetes:
+    uses: ./.github/workflows/kubernetes-base.yaml
+    with:
+      working_directory: kubernetes/monitoring/grafana

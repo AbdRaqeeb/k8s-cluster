@@ -1,0 +1,14 @@
+name: Node Exporter Kubernetes CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'kubernetes/monitoring/node-exporter/**'
+
+jobs:
+  kubernetes:
+    uses: ./.github/workflows/kubernetes-base.yaml
+    with:
+      working_directory: kubernetes/monitoring/node-exporter

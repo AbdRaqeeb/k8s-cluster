@@ -1,0 +1,16 @@
+name: Deploy Demo App CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'kubernetes/apps/demo-app/**'
+      - 'code/**'
+
+jobs:
+  kubernetes:
+    uses: ./.github/workflows/kubernetes-base.yaml
+    with:
+      working_directory: code/demo-app
+      namespace: 'web'

@@ -60,7 +60,7 @@ resource "hcloud_server" "master-node" {
       "apt-get update",
       "apt-get install -y kubelet kubeadm kubectl",
       "apt-mark hold kubelet kubeadm kubectl",
-      "kubeadm init --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address=${var.master_node_network_ip}",
+      "kubeadm init --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address=${var.master_node_network_ip} --apiserver-cert-extra-sans=${self.ipv4_address}",
       "mkdir -p $HOME/.kube",
       "cp -i /etc/kubernetes/admin.conf $HOME/.kube/config",
       "chown $(id -u):$(id -g) $HOME/.kube/config",

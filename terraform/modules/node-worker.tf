@@ -70,7 +70,10 @@ resource "hcloud_server" "workers-node" {
       "echo 'Waiting for master node to be ready...'",
       "until nc -z ${var.master_node_network_ip} 6443; do sleep 10; done",
       "JOIN_CMD=$(ssh -o StrictHostKeyChecking=no -i /root/.ssh/master.pem root@${var.master_node_network_ip} 'kubeadm token create --print-join-command')",
-      "bash /root/setup-worker.sh \"$JOIN_CMD\""
+      "bash /root/setup-worker.sh \"$JOIN_CMD\"",
+      "mkdir -p /root/.kube",
+      "scp -o StrictHostKeyChecking=no -i /root/.ssh/master.pem root@${var.master_node_network_ip}:/etc/kubernetes/admin.conf /root/.kube/config",
+      "chmod 600 /root/.kube/config"
     ]
   }
 

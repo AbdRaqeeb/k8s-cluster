@@ -1,0 +1,14 @@
+name: Nginx Kubernetes CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'kubernetes/nginx/**'
+
+jobs:
+  kubernetes:
+    uses: ./.github/workflows/kubernetes-base.yaml
+    with:
+      working_directory: kubernetes/nginx
