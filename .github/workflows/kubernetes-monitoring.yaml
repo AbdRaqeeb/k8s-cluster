@@ -1,0 +1,14 @@
+name: Monitoring Kubernetes CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'kubernetes/monitoring/**'
+
+jobs:
+  kubernetes:
+    uses: ./.github/workflows/kubernetes-base.yaml
+    with:
+      working_directory: kubernetes/monitoring

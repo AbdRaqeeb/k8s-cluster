@@ -1,0 +1,54 @@
+name: "Logging Kubernetes CI/CD"
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'kubernetes/logging/**'
+
+jobs:
+  kubernetes:
+    name: 'Kubernetes'
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: kubernetes/logging
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+
+      - name: Configure Kubernetes credentials
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }}
+
+
+      - name: Download Vector config
+        run: |
+          curl -o vector-agent.yaml https://telemetry.betterstack.com/vector-yaml/kubernetes/${{ secrets.LIVE_TAIL_TOKEN }}
+    
+
+      - name: Validate Kubernetes manifests
+        run: |
+          kubectl apply --dry-run=client -k .
+
+      # Deploy to Kubernetes
+      - name: Deploy to Kubernetes
+        run: |
+          # Apply all manifests in the k8s directory
+          kubectl apply -k .
+          kubectl rollout restart -n vector daemonset/vector
+
+      - name: Monitor Vector logs
+        run: |
+          rm -rf vector-agent.yaml

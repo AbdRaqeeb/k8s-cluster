@@ -52,4 +52,4 @@ spec:
               service:
                 name: demo-app-service
                 port:
-                  number: 80
+                  number: 3000
