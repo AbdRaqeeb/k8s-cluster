@@ -18,3 +18,5 @@ jobs:
     uses: ./.github/workflows/kubernetes-base.yaml
     with:
       working_directory: code/demo-app
+    secrets:
+      kube_config: ${{ secrets.KUBE_CONFIG }}

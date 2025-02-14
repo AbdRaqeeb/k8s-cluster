@@ -10,7 +10,7 @@ app.set('view engine', 'ejs');
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
-    res.render('index', { title: 'Modern UI' });
+    res.render('index', { title: 'Modern UI ' });
 });
 
 app.listen(port, () => {
