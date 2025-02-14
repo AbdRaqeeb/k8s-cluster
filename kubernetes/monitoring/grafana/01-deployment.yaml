@@ -26,4 +26,3 @@ spec:
                 secretKeyRef:
                   name: grafana-secret
                   key: GF_SECURITY_ADMIN_PASSWORD
-
