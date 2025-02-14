@@ -6,9 +6,12 @@ on:
       - main
     paths:
       - 'kubernetes/monitoring/node-exporter/**'
+  workflow_dispatch:
 
 jobs:
   kubernetes:
     uses: ./.github/workflows/kubernetes-base.yaml
     with:
       working_directory: kubernetes/monitoring/node-exporter
+    secrets:
+      config: ${{ secrets.KUBE_CONFIG }}
