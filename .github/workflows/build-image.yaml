@@ -39,8 +39,7 @@ jobs:
         run: |
           docker buildx build \
             --platform linux/arm64,linux/amd64\
-            --tag ghcr.io/abdraqeeb/demo-app:latest \
-            --push .
+            --tag ghcr.io/abdraqeeb/demo-app:latest .
         env:
           CR_PAT: ${{ secrets.CR_PAT }}
 
